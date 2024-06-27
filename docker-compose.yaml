@@ -1,0 +1,9 @@
+services:
+  elasticsearch:
+    image: elasticsearch:8.14.1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
