@@ -107,38 +107,47 @@ func createIndex(indexName string) {
 	}
 	res, err := req.Do(context.Background(), es)
 	if err != nil {
-		log.Fatalf("Cannot create index: %s", err)
+		log.Fatalf("cannot create index: %s", err)
 	}
 	defer res.Body.Close()
 	if res.IsError() {
-		log.Fatalf("Cannot create index: %s", res.String())
+		log.Fatalf("cannot create index: %s", res.String())
 	}
 }
 
 func indexRecords(indexName string, records []map[string]interface{}) {
+	var buf bytes.Buffer
+
 	for _, record := range records {
+		meta := []byte(fmt.Sprintf(`{ "index" : { "_index" : "%s" } }%s`, indexName, "\n"))
 		data, err := json.Marshal(record)
 		if err != nil {
-			log.Fatalf("Cannot encode record: %s", err)
+			log.Fatalf("cannot encode record %v: %s", record, err)
 		}
 
-		req := esapi.IndexRequest{
-			Index:   indexName,
-			Body:    bytes.NewReader(data),
-			Refresh: "true",
-			OpType:  "create",
-		}
+		data = append(data, "\n"...)
 
-		res, err := req.Do(context.Background(), es)
-		if err != nil {
-			log.Fatalf("error getting response: %s", err)
-		}
-		defer res.Body.Close()
-
-		if res.IsError() {
-			log.Printf("[%s] error indexing document ID=%s", res.Status(), record["id"])
-		}
+		buf.Grow(len(meta) + len(data))
+		buf.Write(meta)
+		buf.Write(data)
 	}
+
+	req := esapi.BulkRequest{
+		Body:    bytes.NewReader(buf.Bytes()),
+		Refresh: "true",
+	}
+
+	res, err := req.Do(context.Background(), es)
+	if err != nil {
+		log.Fatalf("failed to perform bulk request: %s", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		log.Fatalf("bulk request failed: %s", res.String())
+	}
+
+	log.Println("bulk indexing completed successfully")
 }
 
 func readCSV(filename string) ([]map[string]interface{}, error) {
@@ -177,6 +186,7 @@ func main() {
 	records, err := readCSV("datasets/" + csvFile)
 	if err != nil {
 		log.Fatalf("Error reading CSV file: %s", err)
+		return
 	}
 
 	populateElastic(indexName, records)
