@@ -41,23 +41,17 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var buf map[string]interface{}
-	err := json.Unmarshal([]byte(fmt.Sprintf(`{"query": {"match": {"Title": "%s"}}}`, query)), &buf)
-	if err != nil {
-		http.Error(w, "Error parsing the query", http.StatusInternalServerError)
-		return
-	}
-
-	var b []byte
-	b, err = json.Marshal(buf)
-	if err != nil {
-		http.Error(w, "Error marshaling the query", http.StatusInternalServerError)
-		return
-	}
+	esQuery := fmt.Sprintf(`{
+		"query": {
+			"match_phrase_prefix": {
+				"Title": "%s"
+			}
+		}
+	}`, query)
 
 	req := esapi.SearchRequest{
 		Index: []string{indexName},
-		Body:  bytes.NewReader(b),
+		Body:  bytes.NewReader([]byte(esQuery)),
 	}
 
 	res, err := req.Do(r.Context(), es)
@@ -98,12 +92,74 @@ func populateElastic(indexName string, records []map[string]interface{}) {
 
 		log.Println("indexing records...")
 		indexRecords(indexName, records)
+
+		log.Println("data imported successfully")
 	}
 }
 
 func createIndex(indexName string) {
+	mapping := `{
+		"settings": {
+			"number_of_shards": 1,
+			"number_of_replicas": 1,
+			"analysis": {
+				"analyzer": {
+					"autocomplete": {
+						"type": "custom",
+						"tokenizer": "standard",
+						"filter": ["lowercase", "autocomplete_filter"]
+					}
+				},
+				"filter": {
+					"autocomplete_filter": {
+						"type": "edge_ngram",
+						"min_gram": 1,
+						"max_gram": 20
+					}
+				}
+			}
+		},
+		"mappings": {
+			"properties": {
+				"Release_Date": {
+					"type": "date",
+					"format": "yyyy-MM-dd"
+				},
+				"Title": {
+					"type": "text",
+					"analyzer": "autocomplete",
+					"search_analyzer": "standard"
+				},
+				"Overview": {
+					"type": "text",
+					"analyzer": "standard"
+				},
+				"Popularity": {
+					"type": "float"
+				},
+				"Vote_Count": {
+					"type": "integer"
+				},
+				"Vote_Average": {
+					"type": "float"
+				},
+				"Original_Language": {
+					"type": "keyword"
+				},
+				"Genre": {
+					"type": "keyword"
+				},
+				"Poster_Url": {
+					"type": "keyword",
+					"index": false
+				}
+			}
+		}
+	}`
+
 	req := esapi.IndicesCreateRequest{
 		Index: indexName,
+		Body:  bytes.NewReader([]byte(mapping)),
 	}
 	res, err := req.Do(context.Background(), es)
 	if err != nil {
@@ -190,8 +246,6 @@ func main() {
 	}
 
 	populateElastic(indexName, records)
-
-	log.Println("data imported successfully")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/search", searchHandler).Methods("GET")
