@@ -25,7 +25,10 @@ var es *elasticsearch.Client
 
 func init() {
 	var err error
-	es, err = elasticsearch.NewDefaultClient()
+	cfg := elasticsearch.Config{
+		Addresses: []string{"http://127.0.0.1:9200"},
+	}
+	es, err = elasticsearch.NewClient(cfg)
 	if err != nil {
 		log.Fatalf("Error creating the client: %s", err)
 	}
@@ -39,7 +42,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var buf map[string]interface{}
-	err := json.Unmarshal([]byte(fmt.Sprintf(`{"query": {"match": {"name": "%s"}}}`, query)), &buf)
+	err := json.Unmarshal([]byte(fmt.Sprintf(`{"query": {"match": {"Title": "%s"}}}`, query)), &buf)
 	if err != nil {
 		http.Error(w, "Error parsing the query", http.StatusInternalServerError)
 		return
@@ -53,7 +56,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := esapi.SearchRequest{
-		Index: []string{"students"},
+		Index: []string{indexName},
 		Body:  bytes.NewReader(b),
 	}
 
@@ -77,6 +80,25 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
+}
+
+func populateElastic(indexName string, records []map[string]interface{}) {
+	indexExistsReq := esapi.IndicesGetRequest{
+		Index: []string{indexName},
+	}
+
+	resIndex, err := indexExistsReq.Do(context.Background(), es)
+	if err != nil {
+		log.Fatalf("error trying to find index: %s", err)
+	}
+
+	if resIndex.StatusCode == http.StatusNotFound {
+		log.Println("index not found, creating index...")
+		createIndex(indexName)
+
+		log.Println("indexing records...")
+		indexRecords(indexName, records)
+	}
 }
 
 func createIndex(indexName string) {
@@ -104,18 +126,17 @@ func indexRecords(indexName string, records []map[string]interface{}) {
 			Index:   indexName,
 			Body:    bytes.NewReader(data),
 			Refresh: "true",
+			OpType:  "create",
 		}
 
 		res, err := req.Do(context.Background(), es)
 		if err != nil {
-			log.Fatalf("Error getting response: %s", err)
+			log.Fatalf("error getting response: %s", err)
 		}
 		defer res.Body.Close()
 
 		if res.IsError() {
-			log.Printf("[%s] Error indexing document ID=%s", res.Status(), record["id"])
-		} else {
-			log.Printf("[%s] Document indexed successfully", res.Status())
+			log.Printf("[%s] error indexing document ID=%s", res.Status(), record["id"])
 		}
 	}
 }
@@ -158,12 +179,9 @@ func main() {
 		log.Fatalf("Error reading CSV file: %s", err)
 	}
 
-	log.Println(records)
+	populateElastic(indexName, records)
 
-	createIndex(indexName)
-	indexRecords(indexName, records)
-
-	log.Println("Data imported successfully")
+	log.Println("data imported successfully")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/search", searchHandler).Methods("GET")
