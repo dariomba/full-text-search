@@ -4,6 +4,21 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
+    healthcheck:
+        test: curl --fail http://localhost:9200/ || exit 1
+        interval: 30s
+        timeout: 10s
+        retries: 10
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+  backend:
+    image: full-text-search-backend
+    build: ./backend
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTIC_ADDRESS=http://elasticsearch:9200
