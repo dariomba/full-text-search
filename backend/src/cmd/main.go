@@ -16,14 +16,17 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 var es *elasticsearch.Client
 
 func init() {
+	godotenv.Load()
+
 	var err error
 	cfg := elasticsearch.Config{
-		Addresses: []string{"http://127.0.0.1:9200"},
+		Addresses: []string{os.Getenv("ELASTIC_ADDRESS")},
 	}
 	es, err = elasticsearch.NewClient(cfg)
 	if err != nil {
