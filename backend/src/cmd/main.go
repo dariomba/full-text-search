@@ -11,14 +11,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/dariomba/full-text-search/src/internal/constants"
+	"github.com/dariomba/full-text-search/src/internal/handlers"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/gorilla/mux"
-)
-
-const (
-	csvFile   = "movies.csv"
-	indexName = "movies"
 )
 
 var es *elasticsearch.Client
@@ -32,48 +29,6 @@ func init() {
 	if err != nil {
 		log.Fatalf("Error creating the client: %s", err)
 	}
-}
-
-func searchHandler(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("q")
-	if query == "" {
-		http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
-		return
-	}
-
-	esQuery := fmt.Sprintf(`{
-		"query": {
-			"match_phrase_prefix": {
-				"Title": "%s"
-			}
-		}
-	}`, query)
-
-	req := esapi.SearchRequest{
-		Index: []string{indexName},
-		Body:  bytes.NewReader([]byte(esQuery)),
-	}
-
-	res, err := req.Do(r.Context(), es)
-	if err != nil {
-		http.Error(w, "Error getting response from Elasticsearch", http.StatusInternalServerError)
-		return
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		http.Error(w, res.String(), http.StatusInternalServerError)
-		return
-	}
-
-	var result map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		http.Error(w, "Error parsing the response body", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
 }
 
 func populateElastic(indexName string, records []map[string]interface{}) {
@@ -239,16 +194,17 @@ func readCSV(filename string) ([]map[string]interface{}, error) {
 }
 
 func main() {
-	records, err := readCSV("datasets/" + csvFile)
+	records, err := readCSV("datasets/" + constants.CsvFilename)
 	if err != nil {
 		log.Fatalf("Error reading CSV file: %s", err)
 		return
 	}
 
-	populateElastic(indexName, records)
+	populateElastic(constants.IndexName, records)
 
 	r := mux.NewRouter()
-	r.HandleFunc("/search", searchHandler).Methods("GET")
+
+	handlers.NewSearchHandler(r, es)
 
 	http.Handle("/", r)
 	log.Println("Starting server on :8080")
