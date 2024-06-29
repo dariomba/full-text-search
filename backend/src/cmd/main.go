@@ -17,6 +17,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 var es *elasticsearch.Client
@@ -150,9 +151,16 @@ func main() {
 
 	r := mux.NewRouter()
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowCredentials: true,
+	})
+
 	handlers.NewSearchHandler(r, es)
 
-	http.Handle("/", r)
+	handler := c.Handler(r)
+
+	http.Handle("/", handler)
 	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

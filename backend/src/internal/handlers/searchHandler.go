@@ -66,7 +66,9 @@ func (s SearchHandler) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response models.MoviesResponse
+	response := models.MoviesResponse{
+		Movies: []models.Movie{},
+	}
 
 	for _, hit := range elasticResponse.Hits.Hits {
 		response.Movies = append(response.Movies, hit.Movie)
