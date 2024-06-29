@@ -31,3 +31,9 @@ type Total struct {
 	Relation string `json:"relation"`
 	Value    int    `json:"value"`
 }
+
+func (h Hit) NewMovie() Movie {
+	newMovie := h.Movie
+	newMovie.ID = h.ID
+	return newMovie
+}

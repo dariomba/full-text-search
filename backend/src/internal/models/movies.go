@@ -5,6 +5,7 @@ type MoviesResponse struct {
 }
 
 type Movie struct {
+	ID               string `json:"ID"`
 	Genre            string `json:"Genre"`
 	OriginalLanguage string `json:"Original_Language"`
 	Overview         string `json:"Overview"`
