@@ -1,6 +1,7 @@
 import { useDebounce } from '@uidotdev/usehooks';
 import { useEffect, useState } from 'react';
 import { Movie, searchAPI } from '../../services/search';
+import { Movies } from '../Movies/Movies';
 
 const DEBOUNCE_DELAY = 50;
 
@@ -73,15 +74,8 @@ export const Search: React.FC = () => {
           />
         </div>
       </form>
-      <ul>
-        {movies.map((movie) => (
-          <li key={movie.ID} className="text-white">
-            <article>
-              <p key={`movie-title-${movie.ID}`}>{movie.Title}</p>
-            </article>
-          </li>
-        ))}
-      </ul>
+
+      <Movies movies={movies} />
     </>
   );
 };
