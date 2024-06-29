@@ -22,3 +22,4 @@ services:
       - elasticsearch
     environment:
       - ELASTIC_ADDRESS=http://elasticsearch:9200
+      - ALLOWED_HOST_URL=http://localhost:5173

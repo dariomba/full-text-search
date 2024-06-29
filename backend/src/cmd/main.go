@@ -152,7 +152,7 @@ func main() {
 	r := mux.NewRouter()
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{os.Getenv("ALLOWED_HOST_URL")},
 		AllowCredentials: true,
 	})
 
