@@ -7,7 +7,7 @@ interface MoviesProps {
 
 export const Movies: React.FC<MoviesProps> = ({ movies }) => {
   return (
-    <ul>
+    <ul className="flex flex-col md:grid md:grid-cols-3 md:items-start p-4 gap-10 justify-center items-center">
       {movies.map((movie) => (
         <MovieCard key={movie.ID} movie={movie} />
       ))}
