@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/dariomba/full-text-search/src/internal/constants"
+	"github.com/dariomba/full-text-search/src/internal/models"
 	"github.com/elastic/go-elasticsearch/esapi"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gorilla/mux"
@@ -59,12 +60,18 @@ func (s SearchHandler) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var result map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+	var elasticResponse models.ElasticResponse
+	if err := json.NewDecoder(res.Body).Decode(&elasticResponse); err != nil {
 		http.Error(w, "Error parsing the response body", http.StatusInternalServerError)
 		return
 	}
 
+	var response models.MoviesResponse
+
+	for _, hit := range elasticResponse.Hits.Hits {
+		response.Movies = append(response.Movies, hit.Movie)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	json.NewEncoder(w).Encode(response)
 }
