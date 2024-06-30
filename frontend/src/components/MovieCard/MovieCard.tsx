@@ -11,6 +11,7 @@ export const MovieCard: React.FC<MovieProps> = ({ movie }) => {
         <img
           className="rounded-t-lg min-w-full max-h-[345px]"
           src={movie.Poster_Url}
+          loading="lazy"
           alt={`Poster image of ${movie.Title}`}
         />
         <div className="p-5">
