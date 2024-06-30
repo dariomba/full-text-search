@@ -1,7 +1,9 @@
 import { useDebounce } from '@uidotdev/usehooks';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Movie, searchAPI } from '../../services/search';
 import { Movies } from '../Movies/Movies';
+import { SearchInput } from '../SearchInput/SearchInput';
+import { Suggestions } from '../Suggestions/Suggestions';
 
 const DEBOUNCE_DELAY = 20;
 
@@ -14,7 +16,6 @@ export const Search: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null);
   const debounceSearch = useDebounce(search, DEBOUNCE_DELAY);
-  const suggestionsRef = useRef<HTMLUListElement | null>(null);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -93,58 +94,15 @@ export const Search: React.FC = () => {
 
   return (
     <>
-      <form onSubmit={handleSubmit} autoComplete="off">
-        <div className="flex">
-          <div className="relative w-full">
-            <input
-              type="search"
-              id="default-search"
-              onChange={handleSearch}
-              value={search}
-              className="flex w-full p-4 text-sm border rounded-2xl bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:border-gray-500 focus:bg-gray-700"
-              placeholder="Avatar, The Matrix, Inception..."
-            />
-            <button
-              type="submit"
-              className="absolute top-0 end-0 p-2.5 text-sm font-medium h-full text-white rounded-e-lg border border-blue-700  focus:ring-4 focus:outline-none  bg-blue-600 hover:bg-blue-700 focus:border-gray-500"
-            >
-              <svg
-                className="w-4 h-4"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-                />
-              </svg>
-              <span className="sr-only">Search</span>
-            </button>
-            {!showMovies && movies.length > 0 && (
-              <ul
-                id="autocomplete-results"
-                ref={suggestionsRef}
-                className="absolute z-10 w-1/2 bg-gray-700 border border-gray-600 rounded-xl mt-1 p-4"
-              >
-                {movies.map((movie, index) => (
-                  <li
-                    key={`suggestion-movie-${movie.ID}`}
-                    className={`text-white cursor-pointer hover:bg-gray-800 hover:rounded ${selectedSuggestion === index ? 'bg-gray-800' : ''}`}
-                    onClick={handleClickSuggestion}
-                  >
-                    {movie.Title}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </form>
+      <SearchInput onChange={handleSearch} onSubmit={handleSubmit} search={search} />
+
+      {!showMovies && movies.length > 0 && (
+        <Suggestions
+          movies={movies}
+          onClickSuggestion={handleClickSuggestion}
+          selectedSuggestion={selectedSuggestion}
+        />
+      )}
 
       {showMovies && <Movies movies={movies} />}
 
