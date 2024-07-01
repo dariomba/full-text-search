@@ -16,7 +16,7 @@ export interface Movie {
 }
 
 export const searchAPI = async (query: string) => {
-  const res = await fetch(`http://localhost:8080/search?q=${query}`);
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/search?q=${query}`);
   const moviesResponse = (await res.json()) as SearchResponse;
   return moviesResponse.movies;
 };
