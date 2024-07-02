@@ -23,13 +23,13 @@ services:
         condition: service_healthy
     environment:
       - ELASTIC_ADDRESS=http://elasticsearch:9200
-      - ALLOWED_HOST_URL=http://frontend
+      - ALLOWED_HOST_URL=http://localhost
   frontend:
     image: full-text-search-frontend
     build:
       context: ./frontend
       args:
-        VITE_API_URL: http://backend:8080
+        VITE_API_URL: http://localhost:8080
     ports:
       - 80:80
     depends_on:
