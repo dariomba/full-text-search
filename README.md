@@ -42,3 +42,7 @@ To run the project, follow these steps:
 ## Usage
 
 Once the application is running, open your web browser and go to http://localhost to access the UI. You can start searching for movies using the search bar provided.
+
+## Dataset
+
+Dataset used in this project: https://www.kaggle.com/datasets/disham993/9000-movies-dataset/data
