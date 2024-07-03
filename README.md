@@ -1,4 +1,4 @@
-# Full text search using Elastic Search
+# Full text search using Elasticsearch
 
 ## Description
 
@@ -8,7 +8,7 @@ Simple web application built with React that allows users to search through a la
 
 - **React Frontend**: Simple UI for searching movies.
 - **Go Backend**: A backend service that handles search queries and communicates with Elasticsearch.
-- **Elastic Search**: Search engine that indexes and retrieves movie data.
+- **Elasticsearch**: Search engine that indexes and retrieves movie data.
 
 ## Prerequisites
 
