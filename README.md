@@ -17,21 +17,47 @@ Simple web application built with React that allows users to search through a la
 
 ## Getting Started
 
-To run the project, follow these steps:
+First of all, clone this repository:
 
-1. Clone the repository:
+```bash
+git clone https://github.com/dariomba/full-text-search.git
+```
+
+### Run with Docker
+
+Build and start the application using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This command will build the Docker images for the frontend, backend, and Elasticsearch, and then start the containers.
+
+### Development mode
+
+1. Run Elasticsearch using Docker with the following command:
 
    ```bash
-   git clone https://github.com/dariomba/full-text-search.git
+   docker run  -p 9200:9200 -e discovery.type=single-node -e xpack.security.enabled=false -d docker.elastic.coelasticsearch/elasticsearch:8.14.2
    ```
 
-2. Build and start the application using Docker Compose:
-
+2. Move to `backend/` directory and create the `.env` file:
    ```bash
-   docker compose up --build
+   ELASTIC_ADDRESS=http://127.0.0.1:9200
+   ALLOWED_HOSTS_URLS=http://localhost:5173
+   ```
+3. Start backend service:
+   ```bash
+   go run ./src/cmd/main.go
+   ```
+4. In other terminal, move to `frontend/` directory, install the dependencies and start the React application:
+   ```bash
+   cd frontend/
+   npm install
+   npm run dev
    ```
 
-   This command will build the Docker images for the frontend, backend, and Elasticsearch, and then start the containers.
+Done! Now you can go to http://localhost:5173 and start searching movies.
 
 ## Project Structure
 
