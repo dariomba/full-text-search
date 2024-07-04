@@ -44,8 +44,8 @@ This command will build the Docker images for the frontend, backend, and Elastic
 2. Move to `backend/` directory and create the `.env` file:
    ```bash
    cd backend/
-   ELASTIC_ADDRESS=http://127.0.0.1:9200
-   ALLOWED_HOSTS_URLS=http://localhost:5173
+   echo 'ELASTIC_ADDRESS=http://127.0.0.1:9200
+   ALLOWED_HOSTS_URLS=http://localhost:5173' > .env
    ```
 3. Start backend service:
    ```bash
