@@ -68,7 +68,7 @@ Done! Now you can go to http://localhost:5173 and start searching movies.
 
 ## Usage
 
-Once the application is running, open your web browser and go to http://localhost to access the UI. You can start searching for movies using the search bar provided.
+Once the application is running, open your web browser and go to http://localhost, or http://localhost:5173 in development mode, to access the UI. You can start searching for movies using the search bar provided.
 
 ## Dataset
 
