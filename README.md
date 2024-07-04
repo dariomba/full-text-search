@@ -38,11 +38,12 @@ This command will build the Docker images for the frontend, backend, and Elastic
 1. Run Elasticsearch using Docker with the following command:
 
    ```bash
-   docker run  -p 9200:9200 -e discovery.type=single-node -e xpack.security.enabled=false -d docker.elastic.coelasticsearch/elasticsearch:8.14.2
+   docker run  -p 9200:9200 -e discovery.type=single-node -e xpack.security.enabled=false -d docker.elastic.co/elasticsearch/elasticsearch:8.14.2
    ```
 
 2. Move to `backend/` directory and create the `.env` file:
    ```bash
+   cd backend/
    ELASTIC_ADDRESS=http://127.0.0.1:9200
    ALLOWED_HOSTS_URLS=http://localhost:5173
    ```
