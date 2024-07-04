@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/dariomba/full-text-search/src/internal/constants"
 	"github.com/dariomba/full-text-search/src/internal/handlers"
@@ -152,7 +153,7 @@ func main() {
 	r := mux.NewRouter()
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{os.Getenv("ALLOWED_HOST_URL")},
+		AllowedOrigins:   strings.Split(os.Getenv("ALLOWED_HOSTS_URLS"), ","),
 		AllowCredentials: true,
 	})
 
