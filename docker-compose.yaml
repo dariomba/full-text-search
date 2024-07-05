@@ -23,7 +23,7 @@ services:
         condition: service_healthy
     environment:
       - ELASTIC_ADDRESS=http://elasticsearch:9200
-      - ALLOWED_HOST_URL=http://localhost
+      - ALLOWED_HOSTS_URLS=http://localhost
   frontend:
     image: full-text-search-frontend
     build:
