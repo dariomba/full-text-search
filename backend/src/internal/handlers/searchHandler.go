@@ -7,22 +7,18 @@ import (
 
 	"github.com/dariomba/full-text-search/src/internal/models"
 	services "github.com/dariomba/full-text-search/src/internal/services/elastic"
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gorilla/mux"
 )
 
 type SearchHandler struct {
-	elasticClient  *elasticsearch.Client
 	elasticService services.ElasticService
 }
 
 func NewSearchHandler(
 	app *mux.Router,
-	es *elasticsearch.Client,
 	elasticService services.ElasticService,
 ) {
 	searchHandler := SearchHandler{
-		elasticClient:  es,
 		elasticService: elasticService,
 	}
 

@@ -42,7 +42,7 @@ func main() {
 		AllowCredentials: true,
 	})
 
-	handlers.NewSearchHandler(r, es, elasticService)
+	handlers.NewSearchHandler(r, elasticService)
 
 	handler := c.Handler(r)
 
