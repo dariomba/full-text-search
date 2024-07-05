@@ -1,28 +1,29 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/dariomba/full-text-search/src/internal/constants"
 	"github.com/dariomba/full-text-search/src/internal/models"
-	"github.com/elastic/go-elasticsearch/esapi"
+	services "github.com/dariomba/full-text-search/src/internal/services/elastic"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gorilla/mux"
 )
 
 type SearchHandler struct {
-	elasticClient *elasticsearch.Client
+	elasticClient  *elasticsearch.Client
+	elasticService services.ElasticService
 }
 
 func NewSearchHandler(
 	app *mux.Router,
 	es *elasticsearch.Client,
+	elasticService services.ElasticService,
 ) {
 	searchHandler := SearchHandler{
-		elasticClient: es,
+		elasticClient:  es,
+		elasticService: elasticService,
 	}
 
 	app.HandleFunc("/search", searchHandler.search).Methods("GET")
@@ -35,45 +36,16 @@ func (s SearchHandler) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	esQuery := fmt.Sprintf(`{
-		"query": {
-			"match_phrase_prefix": {
-				"Title": "%s"
-			}
-		}
-	}`, query)
-
-	req := esapi.SearchRequest{
-		Index: []string{constants.IndexName},
-		Body:  bytes.NewReader([]byte(esQuery)),
-	}
-
-	res, err := req.Do(r.Context(), s.elasticClient)
+	movies, err := s.elasticService.SearchMovies(r.Context(), query)
 	if err != nil {
-		http.Error(w, "Error getting response from Elasticsearch", http.StatusInternalServerError)
+		log.Println("an error has ocurred searching movies", err)
+		http.Error(w, "Error searching movies", http.StatusInternalServerError)
 		return
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		http.Error(w, res.String(), http.StatusInternalServerError)
-		return
-	}
-
-	var elasticResponse models.ElasticResponse
-	if err := json.NewDecoder(res.Body).Decode(&elasticResponse); err != nil {
-		http.Error(w, "Error parsing the response body", http.StatusInternalServerError)
-		return
-	}
-
-	response := models.MoviesResponse{
-		Movies: []models.Movie{},
-	}
-
-	for _, hit := range elasticResponse.Hits.Hits {
-		response.Movies = append(response.Movies, hit.NewMovie())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(
+		models.MoviesResponse{
+			Movies: movies,
+		})
 }
