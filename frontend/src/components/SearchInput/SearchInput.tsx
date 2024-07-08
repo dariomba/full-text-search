@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface SearchInputProps {
   search: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -5,21 +7,24 @@ interface SearchInputProps {
 }
 
 export const SearchInput: React.FC<SearchInputProps> = ({ search, onChange, onSubmit }) => {
+  const [isInputFocus, setIsInputFocus] = useState(false);
   return (
     <form onSubmit={onSubmit} autoComplete="off">
       <div className="flex">
-        <div className="relative w-full">
+        <div className="relative w-full focus:border-gray-500">
           <input
             type="search"
             id="default-search"
             onChange={onChange}
+            onFocus={() => setIsInputFocus(true)}
+            onBlur={() => setIsInputFocus(false)}
             value={search}
             className="flex w-full p-4 text-sm border rounded-2xl bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:border-gray-500 focus:bg-gray-700"
             placeholder="Avatar, The Matrix, Inception..."
           />
           <button
             type="submit"
-            className="absolute top-0 end-0 p-2.5 text-sm font-medium h-full text-white rounded-e-lg border border-blue-700  focus:ring-4 focus:outline-none  bg-blue-600 hover:bg-blue-700 focus:border-gray-500"
+            className={`absolute top-0 end-0 p-2.5 text-sm font-medium h-full text-white rounded-e-lg border ${isInputFocus ? 'border-gray-600 border-l-white' : 'border-gray-600'} bg-blue-600 hover:bg-blue-700`}
           >
             <svg
               className="w-4 h-4"
