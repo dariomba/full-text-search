@@ -5,16 +5,19 @@ import { Movies } from '../Movies/Movies';
 import { SearchInput } from '../SearchInput/SearchInput';
 import { Suggestions } from '../Suggestions/Suggestions';
 
-const DEBOUNCE_DELAY = 20;
+const DEBOUNCE_DELAY = 50;
+
+type AppState = 'IDLE' | 'SEARCHING' | 'SHOWING_RESULTS' | 'NOT_FOUND' | 'SHOWING_SUGGESTIONS';
 
 export const Search: React.FC = () => {
   const [search, setSearch] = useState(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return searchParams.get('q') || '';
   });
-  const [showMovies, setShowMovies] = useState(true);
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [moviesReady, setMoviesReady] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null);
+  const [appState, setAppState] = useState<AppState>('IDLE');
   const debounceSearch = useDebounce(search, DEBOUNCE_DELAY);
 
   const handleKeyDown = useCallback(
@@ -32,7 +35,7 @@ export const Search: React.FC = () => {
         const selectedMovie = movies[selectedSuggestion];
         if (selectedMovie) {
           setSearch(selectedMovie.Title);
-          setShowMovies(true);
+          setAppState('SHOWING_RESULTS');
         }
       }
     },
@@ -66,29 +69,32 @@ export const Search: React.FC = () => {
   }, [handleKeyDown]);
 
   async function searchMovies(searchQuery: string) {
+    setMoviesReady(false);
     try {
       const moviesFiltered = await searchAPI(searchQuery);
       setMovies(moviesFiltered);
     } catch (e) {
       console.error(e);
+    } finally {
+      setMoviesReady(true);
     }
   }
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setShowMovies(false);
+    setAppState('SHOWING_SUGGESTIONS');
     setSearch(event.target.value);
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setShowMovies(true);
+    setAppState('SHOWING_RESULTS');
   };
 
   const handleClickSuggestion = (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
     const clickedElement = event.currentTarget.textContent;
     if (clickedElement) {
       setSearch(clickedElement);
-      setShowMovies(true);
+      setAppState('SHOWING_RESULTS');
     }
   };
 
@@ -96,7 +102,7 @@ export const Search: React.FC = () => {
     <>
       <SearchInput onChange={handleSearch} onSubmit={handleSubmit} search={search} />
 
-      {!showMovies && movies.length > 0 && (
+      {appState === 'SHOWING_SUGGESTIONS' && movies.length > 0 && (
         <Suggestions
           movies={movies}
           onClickSuggestion={handleClickSuggestion}
@@ -104,11 +110,11 @@ export const Search: React.FC = () => {
         />
       )}
 
-      {showMovies && <Movies movies={movies} />}
+      {appState === 'SHOWING_RESULTS' && moviesReady && <Movies movies={movies} />}
 
-      {search === '' && <p className="text-white text-center p-6">Search a movie and check how fast it is! 👀</p>}
+      {appState === 'IDLE' && <p className="text-white text-center p-6">Search a movie and check how fast it is! 👀</p>}
 
-      {showMovies && search !== '' && movies.length === 0 && (
+      {appState === 'NOT_FOUND' && (
         <p className="text-white text-center p-6">No results found 😞, please try again with another movie</p>
       )}
     </>
